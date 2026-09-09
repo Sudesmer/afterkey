@@ -1,0 +1,31 @@
+AFTERKEY v1.1.0 VERIFICATION
+================================
+
+Controlled validation completed successfully.
+
+Unit tests:
+5 passed
+
+One-command demo:
+PASS
+
+Baseline:
+Residual copies : 4
+Reach domains   : 4
+State           : INCOMPLETE
+
+Final:
+Residual copies : 0
+Reach domains   : 0
+State           : COMPLETE
+
+Enterprise-safe additions validated:
+- read-only scan mode
+- explicit manifest scope
+- root-scope guard
+- ignore rules
+- optional sources
+- JSON scan output
+- CI-friendly exit codes
+- Windows-safe lab cleanup
+- one-command demo

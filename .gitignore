@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+.venv/
+.afterkey/
+dist/
+build/
+*.egg-info/
+lab/app/
+lab/repo/
+lab/artifacts/
+lab/container/
+lab/backups/
+afterkey.lab.json
+.pytest_cache/
+company.afterkey.json
+company-scope/

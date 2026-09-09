@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "secret": {
+    "id": "INC-2026-0412",
+    "fingerprint": "CREATE_WITH_AFTERKEY_INIT",
+    "status": "revoked",
+    "revoked_at": "2026-09-09T10:00:00+00:00"
+  },
+  "settings": {
+    "max_member_bytes": 10485760,
+    "max_archive_depth": 2,
+    "allow_root_scope": false,
+    "exclude": [
+      "node_modules/**",
+      ".venv/**",
+      "__pycache__/**",
+      "*.tmp"
+    ]
+  },
+  "sources": [
+    {
+      "name": "payments-app",
+      "type": "filesystem",
+      "path": "./scope/app"
+    },
+    {
+      "name": "payments-git",
+      "type": "git_history",
+      "path": "./scope/repo"
+    },
+    {
+      "name": "release-artifact",
+      "type": "artifact",
+      "path": "./scope/build.zip",
+      "required": false
+    },
+    {
+      "name": "approved-backups",
+      "type": "backup",
+      "path": "./scope/backups",
+      "required": false
+    }
+  ]
+}
