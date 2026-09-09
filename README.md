@@ -1,160 +1,186 @@
+<div align="center">
+
 AFTERKEY
 
 The key was revoked. The exposure wasn't.
 
-AFTERKEY is a small-footprint defensive security tool for verifying whether known secret material still persists after credential revocation.
+Read-only verification for post-revocation secret persistence.
 
-Instead of asking:
 
-"Is this credential still valid?"
 
-AFTERKEY asks:
 
-"Where does the old secret still exist?"
 
-A revoked credential may no longer authorize access, while residual copies can remain inside Git history, build artifacts, container exports, backups, or local files.
 
-AFTERKEY provides a read-only way to detect those copies, track remediation progress, and verify when the authorized scope reaches zero residual exposure.
+
+</div>
 
 Why AFTERKEY?
 
-Secret scanners are primarily designed to discover exposed credentials.
-
-AFTERKEY focuses on a different stage of the lifecycle:
-
-post-revocation eradication verification.
-
-Typical incident flow:
-
-Secret exposure detected
-        ↓
-Credential revoked / rotated
-        ↓
-AFTERKEY baseline scan
-        ↓
-Residual copies identified
-        ↓
-Company-controlled remediation
-        ↓
-AFTERKEY rescan
-        ↓
-0 residual copies
-        ↓
-Eradication verified
-
-Core Principle
-
-Detect → Report → Remediate → Rescan → Verify
-
-AFTERKEY is read-only by design during production scanning.
-
-It does not:
-
-delete files
-
-rewrite Git history
-
-revoke credentials
-
-rotate credentials
-
-authenticate to external services
-
-test credential validity
-
-make network calls
-
-Remediation remains under the control of the organization.
-
-Supported Persistence Domains
-
-AFTERKEY can currently inspect authorized local sources including:
+A credential can be revoked while copies of the old secret still remain in places such as:
 
 Git history
 
-filesystem paths
+build artifacts
+
+container exports
 
 backup directories
 
-ZIP/build artifacts
+local files
 
-container exports and nested archive layers
+AFTERKEY starts with a known, authorized secret and answers a narrower question than a general secret scanner:
 
-Example
+Where does the old secret still exist after revocation?
 
-A revoked synthetic secret was intentionally left in three persistence domains while the current application state remained clean.
+It then lets a security team rescan the same authorized scope until the residual count reaches zero.
 
-Initial verification:
+How it works
 
-Mode               : READ-ONLY
-Residual copies    : 3
-Reach domains      : 3
-Eradication state  : INCOMPLETE
+Secret exposure
+      │
+      ▼
+Revoke / rotate
+      │
+      ▼
+AFTERKEY baseline scan
+      │
+      ├── Git history
+      ├── Build artifacts
+      ├── Container exports
+      ├── Backups
+      └── Filesystem
+      │
+      ▼
+Residual findings
+      │
+      ▼
+Company-controlled remediation
+      │
+      ▼
+AFTERKEY rescan
+      │
+      ▼
+0 residual copies → COMPLETE
+
+AFTERKEY verifies. It does not remediate production data.
+
+Example result
+
+AFTERKEY REPORT
+====================================================
+Secret ID              : COMPANY-LAB-001
+Mode                   : READ-ONLY
+Lifecycle              : revoked
+Credential validity    : NOT TESTED
+Residual copies        : 3
+Reach domains          : 3
+Eradication state      : INCOMPLETE
 
 [RESIDUAL] git_history
 [RESIDUAL] artifact
 [RESIDUAL] backup
 
-After controlled remediation by the simulated organization:
+After remediation by the organization:
 
-Observed lifecycle: 3 -> 2 -> 1 -> 0
-Final state: COMPLETE
+3 → 2 → 1 → 0
 
-AFTERKEY performed verification only.
+Residual copies        : 0
+Reach domains          : 0
+Eradication state      : COMPLETE
 
-Enterprise-Safe Design
+Design principles
 
-Explicit manifest-defined scope
+Principle
 
-Root filesystem scanning blocked by default
+AFTERKEY
 
-Read-only production behavior
+Production scan behavior
 
-Ignore/exclusion rules
+Read-only
 
-JSON evidence output
+Runtime Python dependencies
 
-CI-friendly exit codes
+0
 
-Zero runtime Python dependencies
+Network calls
 
-No agent
+None
 
-No server
+Agent / server / database
 
-No database
+None
 
-No cloud credentials
+Credential validity testing
 
-No network calls
+Not performed
+
+Plaintext secret in reports
+
+No
+
+Scope
+
+Explicitly manifest-defined
+
+Root filesystem scan
+
+Blocked by default
 
 Minimum surface. Maximum evidence.
 
-Quick Start
+Supported sources
 
-Check the environment:
+Source type
+
+Status
+
+Git history
+
+✓
+
+Filesystem paths
+
+✓
+
+Backup directories
+
+✓
+
+ZIP / build artifacts
+
+✓
+
+Container exports
+
+✓
+
+Nested archive layers
+
+✓
+
+Quick start
+
+1. Check the environment
 
 python -m afterkey doctor
 
-Run the controlled synthetic demo:
+2. Run the controlled demo
 
 python -m afterkey demo
-
-Expected result:
-
-Residual copies   : 0
-Reach domains     : 0
-Eradication state : COMPLETE
 
 Windows users can also run:
 
 run_demo_windows.bat
 
-Production Scan
+Expected final state:
 
-Create a manifest containing only explicitly authorized sources.
+Residual copies   : 0
+Reach domains     : 0
+Eradication state : COMPLETE
 
-Example:
+Company usage
+
+Create a manifest containing only the sources the organization has authorized for inspection.
 
 {
   "sources": [
@@ -176,46 +202,72 @@ Example:
   ]
 }
 
-Then run:
+Run:
 
 python -m afterkey scan --manifest afterkey.json
 
-The known secret is entered through a hidden prompt.
+The known secret is entered through a hidden prompt. AFTERKEY stores a fingerprint for correlation and does not place the plaintext secret in evidence reports.
 
-AFTERKEY does not store the plaintext secret in its evidence report.
+Exit codes
 
-Exit Codes
+Code
 
-0 = scan completed, no residual copies found
-1 = scan completed, residual copies found
-2 = configuration / runtime error
+Meaning
 
-This allows AFTERKEY to be integrated into incident-response and CI workflows without making the tool destructive.
+0
 
-Experimental Metrics
+Scan completed; no residual copies found
 
-AFTERKEY can track:
+1
 
-Time-to-Eradication (TTE)
-Time between revocation and the first verified zero-residual state.
+Scan completed; residual copies found
+
+2
+
+Configuration, input, or runtime error
+
+This makes AFTERKEY usable in CI and incident-response workflows without turning it into an automatic deletion tool.
+
+Lifecycle metrics
+
+Time-to-Eradication
+
+Time between the recorded revocation point and the first verified scan with zero residual copies.
 
 Residual Half-Life
-Experimental AFTERKEY metric measuring how long it takes for observed residual copies to fall to half the baseline count.
 
-Residual Half-Life is an experimental AFTERKEY research metric and is not a NIST or OWASP metric.
+Experimental AFTERKEY metric for the time required for the observed residual copy count to fall to half of its baseline value.
 
-Research Hypothesis
+Residual Half-Life is an experimental AFTERKEY research metric. It is not a NIST or OWASP metric.
+
+Security boundary
+
+AFTERKEY does not:
+
+delete production files
+
+rewrite production Git history
+
+revoke or rotate credentials
+
+authenticate to external services
+
+test whether a credential is still active
+
+make network calls
+
+Production remediation remains under the control of the organization.
+
+Use AFTERKEY only on systems, repositories, artifacts, backups, and credentials you are authorized to inspect.
+
+See SECURITY.md and ENTERPRISE_GUIDE.md.
+
+Research hypothesis
 
 Credential revocation can terminate authorization without automatically eradicating every residual copy of the secret material.
 
 AFTERKEY was built to make that remaining exposure visible and measurable.
 
-Security Boundary
-
-Use AFTERKEY only on systems, repositories, backups, artifacts, and credentials you are authorized to inspect.
-
-See SECURITY.md and ENTERPRISE_GUIDE.md for additional guidance.
-
 License
 
-MIT License
+MIT License.
