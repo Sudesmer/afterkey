@@ -46,3 +46,20 @@ Revoke credential
 Rotate credential
       ↓
 Continue operations
+
+## Core workflow
+
+```text
+Exposure detected
+      ↓
+Revoke / rotate
+      ↓
+AFTERKEY scan
+      ↓
+Residual findings
+      ↓
+Company remediation
+      ↓
+AFTERKEY rescan
+      ↓
+0 residual → COMPLETE
